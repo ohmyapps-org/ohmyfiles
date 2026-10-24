@@ -9,7 +9,7 @@ export interface Item {
   file: File
   status: Status
   converter?: Converter
-  result?: { url: string; name: string; size: number }
+  result?: { blob: Blob; url: string; name: string; size: number }
   error?: ConversionErrorCode
 }
 
@@ -34,6 +34,7 @@ export function useQueue() {
       patch(id, {
         status: 'done',
         result: {
+          blob,
           url: URL.createObjectURL(blob),
           name: outputName(file, converter),
           size: blob.size,

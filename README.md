@@ -1,13 +1,13 @@
 # OhMyFiles
 
-Conversor de archivos que corre entero en el navegador. Los archivos no se suben ni se guardan. Hoy convierte HEIC (iPhone) a PNG.
+Conversor de archivos que corre entero en el navegador. Los archivos no se suben ni se guardan. Hoy convierte HEIC (iPhone) a PNG, en lote, y baja todo junto en un ZIP.
 
 ## Desarrollo
 
 ```bash
 bun install
 bun run dev      # http://localhost:5173
-bun run check    # tsc + oxlint
+bun run check    # tsc + oxlint + bun test
 bun run build
 ```
 

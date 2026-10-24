@@ -8,12 +8,20 @@ export const es = {
   dropHint: (formats: string) => `o tocá para elegirlos (${formats})`,
   dropAction: 'Elegir archivos',
   listTitle: 'Archivos',
-  summary: (total: number, done: number) =>
-    total === 1
-      ? done === 1
-        ? '1 archivo listo'
-        : '1 archivo'
-      : `${done} de ${total} listos`,
+  summary: (total: number, done: number, failed: number) => {
+    const base =
+      total === 1
+        ? done === 1
+          ? '1 archivo listo'
+          : '1 archivo'
+        : `${done} de ${total} listos`
+    return failed > 0 ? `${base} · ${failed} con error` : base
+  },
+  progress: 'Progreso de la conversión',
+  zip: (count: number) => `Descargar todo (.zip, ${count})`,
+  zipping: 'Armando el ZIP…',
+  zipFailed:
+    'No se pudo armar el ZIP. Probá con menos archivos o descargalos de a uno.',
   empty: 'Todavía no hay archivos. Soltá o elegí algunos para empezar.',
   pending: 'En cola',
   converting: 'Convirtiendo',

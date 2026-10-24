@@ -1,13 +1,37 @@
-import { ArrowRight, ShieldCheck } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowRight, FileArchive, ShieldCheck } from 'lucide-react'
 import { DropZone } from '@/components/DropZone'
 import { FileRow } from '@/components/FileRow'
 import { CONVERTERS } from '@/lib/converters'
+import { saveBlob, zipName } from '@/lib/download'
+import { buildZip } from '@/lib/zip'
 import { es } from '@/i18n/es'
 import { useQueue } from '@/state/useQueue'
 
 export default function App() {
   const { items, add, remove, retry, clear } = useQueue()
-  const done = items.filter((item) => item.status === 'done').length
+  const [zipping, setZipping] = useState(false)
+  const [zipFailed, setZipFailed] = useState(false)
+
+  const ready = items.flatMap((item) =>
+    item.status === 'done' && item.result
+      ? [{ name: item.result.name, blob: item.result.blob }]
+      : [],
+  )
+  const failed = items.filter((item) => item.status === 'error').length
+  const processed = ready.length + failed
+
+  async function downloadZip() {
+    setZipping(true)
+    setZipFailed(false)
+    try {
+      saveBlob(await buildZip(ready), zipName())
+    } catch {
+      setZipFailed(true)
+    } finally {
+      setZipping(false)
+    }
+  }
 
   return (
     <main className="mx-auto flex min-h-svh w-full max-w-3xl flex-col gap-6 px-gutter py-10">
@@ -39,26 +63,57 @@ export default function App() {
       </p>
 
       <section className="flex flex-col gap-3" aria-labelledby="files-title">
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="files-title" className="text-h3 font-medium text-text">
-            {es.listTitle}
-          </h2>
-          {items.length > 0 && (
-            <div className="flex items-center gap-3">
-              <span
-                className="text-meta text-muted tabular-nums"
-                aria-live="polite"
-              >
-                {es.summary(items.length, done)}
-              </span>
-              <button
-                type="button"
-                onClick={clear}
-                className="inline-flex h-8 items-center rounded-control px-3 text-meta font-medium text-muted transition-colors duration-(--dur-fast) hover:bg-text/8 hover:text-text"
-              >
-                {es.clear}
-              </button>
+        <div className="sticky top-0 z-10 -mx-gutter flex flex-col gap-2 bg-bg px-gutter py-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="files-title" className="text-h3 font-medium text-text">
+              {es.listTitle}
+            </h2>
+            {items.length > 0 && (
+              <div className="flex flex-wrap items-center gap-3">
+                <span
+                  className="text-meta text-muted tabular-nums"
+                  aria-live="polite"
+                >
+                  {es.summary(items.length, ready.length, failed)}
+                </span>
+                <button
+                  type="button"
+                  onClick={clear}
+                  className="inline-flex h-8 items-center rounded-control px-3 text-meta font-medium text-muted transition-colors duration-(--dur-fast) hover:bg-text/8 hover:text-text"
+                >
+                  {es.clear}
+                </button>
+                <button
+                  type="button"
+                  onClick={downloadZip}
+                  disabled={ready.length === 0 || zipping}
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-control bg-accent px-4 text-body-lg font-medium whitespace-nowrap text-on-accent transition-[filter] duration-(--dur-fast) hover:brightness-110 disabled:opacity-50"
+                >
+                  <FileArchive className="size-4" aria-hidden />
+                  {zipping ? es.zipping : es.zip(ready.length)}
+                </button>
+              </div>
+            )}
+          </div>
+          {items.length > 1 && (
+            <div
+              role="progressbar"
+              aria-label={es.progress}
+              aria-valuemin={0}
+              aria-valuemax={items.length}
+              aria-valuenow={processed}
+              className="h-1.5 overflow-hidden rounded-full bg-text/8"
+            >
+              <div
+                className="h-full rounded-full bg-accent transition-[width] duration-(--dur-layout) ease-standard"
+                style={{ width: `${(processed / items.length) * 100}%` }}
+              />
             </div>
+          )}
+          {zipFailed && (
+            <p role="alert" className="text-meta text-danger">
+              {es.zipFailed}
+            </p>
           )}
         </div>
 
