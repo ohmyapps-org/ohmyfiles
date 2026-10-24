@@ -1,122 +1,84 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { ArrowRight, ShieldCheck } from 'lucide-react'
+import { DropZone } from '@/components/DropZone'
+import { FileRow } from '@/components/FileRow'
+import { CONVERTERS } from '@/lib/converters'
+import { es } from '@/i18n/es'
+import { useQueue } from '@/state/useQueue'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const { items, add, remove, retry, clear } = useQueue()
+  const done = items.filter((item) => item.status === 'done').length
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <main className="mx-auto flex min-h-svh w-full max-w-3xl flex-col gap-6 px-gutter py-10">
+      <header className="flex flex-col gap-2">
+        <h1 className="font-display text-display text-text">{es.title}</h1>
+        <p className="text-body-lg text-muted">{es.subtitle}</p>
+        <ul className="mt-2 flex flex-wrap gap-2" aria-label="Conversiones">
+          {CONVERTERS.map(({ id, from, to }) => (
+            <li
+              key={id}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-meta font-medium text-text"
+            >
+              {from.label}
+              <ArrowRight className="size-3.5 text-muted" aria-hidden />
+              {to.label}
+            </li>
+          ))}
+        </ul>
+      </header>
+
+      <DropZone onFiles={add} />
+
+      <p className="flex items-start gap-2 text-meta text-muted">
+        <ShieldCheck
+          className="mt-0.5 size-4 shrink-0 text-accent"
+          aria-hidden
+        />
+        {es.privacy}
+      </p>
+
+      <section className="flex flex-col gap-3" aria-labelledby="files-title">
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="files-title" className="text-h3 font-medium text-text">
+            {es.listTitle}
+          </h2>
+          {items.length > 0 && (
+            <div className="flex items-center gap-3">
+              <span
+                className="text-meta text-muted tabular-nums"
+                aria-live="polite"
+              >
+                {es.summary(items.length, done)}
+              </span>
+              <button
+                type="button"
+                onClick={clear}
+                className="inline-flex h-8 items-center rounded-control px-3 text-meta font-medium text-muted transition-colors duration-(--dur-fast) hover:bg-text/8 hover:text-text"
+              >
+                {es.clear}
+              </button>
+            </div>
+          )}
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+
+        {items.length === 0 ? (
+          <p className="rounded-card border border-dashed border-border px-4 py-6 text-center text-body-lg text-muted">
+            {es.empty}
           </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {items.map((item) => (
+              <FileRow
+                key={item.id}
+                item={item}
+                onRemove={remove}
+                onRetry={retry}
+              />
+            ))}
           </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
+        )}
       </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    </main>
   )
 }
-
-export default App
