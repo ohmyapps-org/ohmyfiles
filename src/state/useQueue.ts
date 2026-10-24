@@ -17,7 +17,7 @@ export function useQueue() {
   const [items, setItems] = useState<Item[]>([])
   // libheif decodes on the main thread: one file at a time keeps the page alive.
   const chain = useRef<Promise<void>>(Promise.resolve())
-  const removed = useRef(new Set<string>())
+  const [removed] = useState(() => new Set<string>())
 
   function patch(id: string, changes: Partial<Item>) {
     setItems((current) =>
@@ -26,11 +26,11 @@ export function useQueue() {
   }
 
   async function run(id: string, file: File, converter: Converter) {
-    if (removed.current.has(id)) return
+    if (removed.has(id)) return
     patch(id, { status: 'converting' })
     try {
       const blob = await converter.convert(file)
-      if (removed.current.has(id)) return
+      if (removed.has(id)) return
       patch(id, {
         status: 'done',
         result: {
@@ -66,7 +66,7 @@ export function useQueue() {
   }
 
   function remove(id: string) {
-    removed.current.add(id)
+    removed.add(id)
     setItems((current) => {
       const target = current.find((item) => item.id === id)
       if (target?.result) URL.revokeObjectURL(target.result.url)
